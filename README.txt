@@ -63,7 +63,7 @@ Requirements
 
  - bc, cat, cut, composite, convert, dvdauthor, dvddirdel, echo, egrep, grep,
    head, lsdvd, mkfifo, mkisofs, mktemp, mplayer, mplex, mv, rm, sed, spumux,   
-   stat, subtitle2pgm, tail, tccat, tcextract, M2VRequantiser.
+   stat, subtitle2pgm, tail, tccat, tcextract, which, M2VRequantiser.
    
 Known Limitations
 
