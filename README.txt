@@ -41,7 +41,7 @@ As a solution to the above I created this script, which can extract the main
 feature from a DVD video, allowing the user to select one audio stream and one
 subtitle stream. Optionally the video can be requantised and an ISO image 
 created. If creating an ISO image the chapters are also preserved from the 
-original. 
+original DVD. 
 
 Usage
 
@@ -61,9 +61,9 @@ video, audio, subtitle, chapters, etc are also working correctly.
 
 Requirements
 
- - bc, cat, cut, composite, convert, dvdauthor, dvddirdel, echo, egrep, grep,
-   head, lsdvd, mkfifo, mkisofs, mktemp, mplayer, mplex, mv, rm, sed, spumux,   
-   stat, subtitle2pgm, tail, tccat, tcextract, which, M2VRequantiser.
+ - bash, bc, cat, cut, composite, convert, dvdauthor, dvddirdel, echo, egrep, 
+   grep, head, lsdvd, mkfifo, mkisofs, mktemp, mplayer, mplex, mv, rm, sed, 
+   spumux, stat, subtitle2pgm, tail, tccat, tcextract, which, M2VRequantiser.
    
 Known Limitations
 
