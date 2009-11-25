@@ -354,8 +354,20 @@ if [ ${SHRINK} -eq 1 ]; then
         mplayer "${VIDEO_FILE}" -aspect ${VIDEO_ASPECT} -nolirc -nojoystick -quiet -speed 100 -frames 480 -identify -nosound -vo null -ao null -vfm ffmpeg -vf cropdetect > ${CROP_FILE} 2>&1            
                 
         VIDEO_CROP=`grep "[CROP]" ${CROP_FILE} | tail -n1 | cut -d'(' -f2 | sed 's/)\.//'`
-        VIDEO_CROP=`echo ${VIDEO_CROP} | sed s'/-vf //'`
-        #echo "Cropping : ${VIDEO_CROP}"            
+        VIDEO_CROP=`echo ${VIDEO_CROP} | sed s'/-vf //'`           
+                 
+        CROP_WIDTH=`echo ${VIDEO_CROP} | cut -d'=' -f2 | cut -d':' -f1`
+        CROP_HEIGHT=`echo ${VIDEO_CROP} | cut -d'=' -f2 | cut -d':' -f2`
+        
+        CROP_WIDTH_OK=`echo "scale=2; ${CROP_WIDTH}/16" | bc | cut -d'.' -f2`
+        CROP_HEIGHT_OK=`echo "scale=2; ${CROP_HEIGHT}/16" | bc | cut -d'.' -f2`        
+
+        if [ "${CROP_WIDTH_OK}" == "00" ] && [ "${CROP_HEIGHT_OK}" == "00" ]; then
+            echo "GOOD! Cropping width (${CROP_WIDTH}) and height (${CROP_HEIGHT}) are both a multiple of 16."
+        else
+            echo "ERROR! Cropping width (${CROP_WIDTH}) and height (${CROP_HEIGHT}) must both be a multiple of 16."
+            exit
+        fi
         
         # Software Scalers (sws) are:
         #  0    fast bilinear
