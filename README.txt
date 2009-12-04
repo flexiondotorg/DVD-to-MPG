@@ -33,9 +33,9 @@ marketing guff at the start which you can't skip. My wife hates that stuff, and
 I love my wife, so I routinely rip the main feature of newly acquired ex-rental 
 DVD movies so we can avoid the marketing crap.
 
-I run a Mediatomb DLNA server and I want to import all my DVDs. Ripping them 
-helps reduce the amount of storage I will require. MPEG2-PS and MPEG2-TS files 
-are compatible with my PS3 which is the client to my Mediatomb DLNA server.
+I also run a Mediatomb DLNA server and I want to import all my DVDs. Ripping 
+them helps reduce the amount of storage I will require. MPEG2-PS and MPEG2-TS 
+files are compatible with my PS3 which is the client to my Mediatomb DLNA server.
 
 As a solution to the above I created this script, which can extract the main 
 feature from a DVD video, allowing the user to select one audio stream and one
@@ -43,8 +43,8 @@ subtitle stream.
 
 Optionally the video stream can be shrunk. In MPEG-2 PS mode the video is 
 requantised and in MPEG-2 TS mode the video is re-encoded as H.264. Requantising
-is faster but can introduce artifacting. H.264 encoding is slower, but very good
-quality.
+is faster but can introduce artifacting. H.264 encoding is slower, but produces 
+very good quality.
 
 Some things to be aware of:
 
@@ -53,8 +53,10 @@ Some things to be aware of:
   - MPEG-2 PS files created by this script are DVD compliant.
   - ISO files created by this script will preserve the chapters from the 
     original DVD.
-  - The PS3 can't play DTS audio in MPEG-2 PS streams, unless the MPEG-2 PS has
-    been authored to DVD.
+  - The PS3 can only play DTS audio in MPEG-2 PS streams, when it has been 
+    authored to DVD.
+  - The PS3 can only play subtitles in MPEG-2 PS streams, when it has been 
+    authored to DVD.    
   - The PS3 can't play DTS audio in MPEG-2 TS streams, therefore this script 
     will transcode DTS to AC3 when in MPEG-2 TS mode.
 
@@ -77,15 +79,16 @@ video, audio, subtitle, chapters, etc are also working correctly.
  gmplayer -dvd-device DVD_VIDEO.iso dvd://
  vlc DVD_VIDEO.iso
 
+The resulting MPEG-2 PS and MPEG-2 TS files can also be tested/viewed using 
+mplayer or vlc.
+
 Requirements
 
  - aften, bash, bc, cat, cut, dcadec, dvdauthor, dvddirdel, echo, grep, head, 
    ifo_dump, lsdvd, mkfifo, mkisofs, mktemp, mplayer, mplex, mv, rm, sed, 
    spumux, spuunmux, stat, subtitle2vobsub, tail, tccat, tcextract, tsMuxeR, 
    which, M2VRequantiser.
-   
-ifo_dump
-   
+     
 This is how to install ifo_dump on Ubuntu Linux.   
    
  cvs -z3 -d:pserver:anonymous@dvd.cvs.sourceforge.net:/cvsroot/dvd co -P ifodump
@@ -97,13 +100,20 @@ This is how to install ifo_dump on Ubuntu Linux.
  ./autogen
  make
  sudo make install
+
+Updated mplayer and x264
+
+If you are running Ubuntu then I strongly suggest you added the Avenard 
+repository to your system as it includes recent builds or mplayer and x264. 
+
+  * http://avenard.com/media/Ubuntu_Repository/Ubuntu_Repository.html
    
 Known Limitations
 
  - DVDs with ARccOS or other intentional sector corruption are not supported.
+ - Multi-angle titles are not properly supported yet. 
  - No user selection of which title to rip. Defaults to the longest title.
  - Rips one video, one audio stream and one subtitle stream from the source DVD.
- - Multi-angle titles are not properly supported yet.
 
 Source Code
 

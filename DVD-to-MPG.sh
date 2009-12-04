@@ -173,6 +173,9 @@ VIDEO_TRACK=`grep "ID_VIDEO_ID" ${STREAM_INFO} | head -n1 | cut -d'=' -f2`
 VIDEO_WIDTH=`grep "ID_VIDEO_WIDTH" ${STREAM_INFO} | cut -d'=' -f2`
 VIDEO_HEIGHT=`grep "ID_VIDEO_HEIGHT" ${STREAM_INFO} | cut -d'=' -f2`
 VIDEO_FPS=`grep "ID_VIDEO_FPS" ${STREAM_INFO} | cut -d'=' -f2 | sed s'/.000//'`
+# Get the length of the video in secs and half it.
+VIDEO_LENGTH=`grep "ID_LENGTH" ${STREAM_INFO} | cut -d'=' -f2 | cut -d'.' -f1`
+VIDEO_MIDDLE=`echo ${VIDEO_LENGTH}/2 | bc`
 
 # Get the aspect ratio.
 VIDEO_ASPECT=`grep Movie-Aspect ${STREAM_INFO} | grep -v undefined`
@@ -350,12 +353,10 @@ if [ ${SHRINK} -eq 1 ]; then
     VIDEO_SIZE=`stat -c%s "${VIDEO_FILE}"`
     AUDIO_SIZE=`stat -c%s "${AUDIO_FILE}"`
 
-    if [ ${M2TS} -eq 1 ]; then        
-        mplayer "${VIDEO_FILE}" -aspect ${VIDEO_ASPECT} -nolirc -nojoystick -quiet -speed 100 -frames 480 -identify -nosound -vo null -ao null -vfm ffmpeg -vf cropdetect > ${CROP_FILE} 2>&1            
-                
-        VIDEO_CROP=`grep "[CROP]" ${CROP_FILE} | tail -n1 | cut -d'(' -f2 | sed 's/)\.//'`
-        VIDEO_CROP=`echo ${VIDEO_CROP} | sed s'/-vf //'`           
-                 
+    if [ ${M2TS} -eq 1 ]; then
+        mplayer "${VIDEO_FILE}" -aspect ${VIDEO_ASPECT} -nolirc -nojoystick -quiet -ss ${VIDEO_MIDDLE} -speed 100 -frames 480 -identify -nosound -vo null -ao null -vfm ffmpeg,libmpeg2 -vf cropdetect > ${CROP_FILE} 2>&1
+        VIDEO_CROP=`grep "Crop area" ${CROP_FILE} | tail -n1 | cut -d'(' -f2 | sed 's/)\.//' | sed s'/-vf //'`
+	echo ${VIDEO_CROP}
         CROP_WIDTH=`echo ${VIDEO_CROP} | cut -d'=' -f2 | cut -d':' -f1`
         CROP_HEIGHT=`echo ${VIDEO_CROP} | cut -d'=' -f2 | cut -d':' -f2`
         
@@ -395,17 +396,17 @@ if [ ${SHRINK} -eq 1 ]; then
         #  - http://www.mplayerhq.hu/DOCS/HTML/en/menc-feat-x264.html
         #  - http://www.wieser-web.de/MPlayer/sws1/
         #  - http://lists.mplayerhq.hu/pipermail/mplayer-users/2003-October/038642.html
-            
-        X264_COMMON="bitrate=2816:bframes=3:b_bias=0:b_pyramid=0:merange=16:direct_pred=auto:level=4.1:mixed_refs:weight_b:8x8dct:threads=auto"
+
+        X264_COMMON="bitrate=2816:bframes=3:b_bias=0:merange=16:direct_pred=auto:level=4.1:mixed_refs:weight_b:8x8dct:threads=auto"
         X264_PASS1="pass=1:turbo=2:ref=1:me=dia:cabac=0:trellis=0:subme=1:b_adapt=1"
         X264_PASS2="pass=2:turbo=0:ref=5:me=umh:cabac=1:trellis=1:subme=7:b_adapt=0"
 
         echo "1st Pass"
-        eval mencoder "${VIDEO_FILE}" -nosound -of rawvideo -ovc x264 -vf pp=fd,${VIDEO_CROP},softskip,harddup -sws 0  -x264encopts ${X264_COMMON}:${X264_PASS1} -passlogfile ${PASS_FILE} -noskip -o /dev/null
+        eval mencoder "${VIDEO_FILE}" -vfm ffmpeg,libmpeg2 -nosound -of rawvideo -ovc x264 -vf pp=fd,${VIDEO_CROP},softskip,harddup -sws 0  -x264encopts ${X264_COMMON}:${X264_PASS1} -passlogfile ${PASS_FILE} -noskip -o /dev/null 2>/dev/null
 
         echo "2nd Pass"
-        eval mencoder "${VIDEO_FILE}" -nosound -of rawvideo -ovc x264 -vf pp=fd,${VIDEO_CROP},softskip,harddup -sws 10 -x264encopts ${X264_COMMON}:${X264_PASS2} -passlogfile ${PASS_FILE} -noskip -o ${X264_FILE}
-    else    
+        eval mencoder "${VIDEO_FILE}" -vfm ffmpeg,libmpeg2 -nosound -of rawvideo -ovc x264 -vf pp=fd,${VIDEO_CROP},softskip,harddup -sws 10 -x264encopts ${X264_COMMON}:${X264_PASS2} -passlogfile ${PASS_FILE} -noskip -o ${X264_FILE} 2>/dev/null
+    else
         # Calcualte the available DVD5 space for the video.
         if [ "${SUBS_TRACK}" != "" ]; then
             REQUANT_SPACE=`echo "4700000000-${AUDIO_SIZE}-${SUBS_SIZE}" | bc`
@@ -529,10 +530,9 @@ if [ ${KEEP_FILES} -eq 0 ]; then
     rm ${DVD_NAME}.idx 2>/dev/null                    
     rm ${XML_FILE} 2>/dev/null
     rm ${CROP_FILE} 2>/dev/null                            
-    rm ${PASS_FILE} 2>/dev/null                                
+    rm ${PASS_FILE}* 2>/dev/null                                
     rm ${X264_FILE} 2>/dev/null        
     rm ${META_FILE} 2>/dev/null                                
-    rm ${DVD_NAME}*.png 2>/dev/null    
 fi    
 
 # Change the permission on the M2TS file(s) to something sane.
