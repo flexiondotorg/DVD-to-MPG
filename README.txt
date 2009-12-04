@@ -53,11 +53,11 @@ Some things to be aware of:
   - MPEG-2 PS files created by this script are DVD compliant.
   - ISO files created by this script will preserve the chapters from the 
     original DVD.
-  - The PS3 can only play DTS audio in MPEG-2 PS streams, when it has been 
+  - The PS3 can only play DTS audio in MPEG-2 PS streams when they have been 
     authored to DVD.
-  - The PS3 can only play subtitles in MPEG-2 PS streams, when it has been 
+  - The PS3 can only play subtitles in MPEG-2 PS streams when they have been 
     authored to DVD.    
-  - The PS3 can't play DTS audio in MPEG-2 TS streams, therefore this script 
+  - The PS3 can't play DTS audio in MPEG-2 TS streams therefore this script 
     will transcode DTS to AC3 when in MPEG-2 TS mode.
 
 Usage
@@ -104,7 +104,7 @@ This is how to install ifo_dump on Ubuntu Linux.
 Updated mplayer and x264
 
 If you are running Ubuntu then I strongly suggest you added the Avenard 
-repository to your system as it includes recent builds or mplayer and x264. 
+repository to your system as it includes recent builds of mplayer and x264. 
 
   * http://avenard.com/media/Ubuntu_Repository/Ubuntu_Repository.html
    
