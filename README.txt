@@ -61,16 +61,17 @@ Some things to be aware of:
     will transcode DTS to AC3 when in MPEG-2 TS mode.
 
 Usage
-
-  ./DVD-to-MPG.sh /dev/dvd [--iso] [--m2ts] [--keep] [--shrink] [--help]
+  /home/martin/Source/DVD-to-MPG/DVD-to-MPG.sh /dev/dvd [--iso] [--m2ts] [--2pass] [--keep] [--shrink] [--help]
 
 You can also pass the following optional parameters
   --iso    : Create an ISO image of the ripped DVD.    (Implies MPEG-2 PS)
   --m2ts   : Create a MPEG-2 TS file with H.264 video. (Subtitles not supported)
+  --2pass  : Enable 2 pass encoding for the H.264 video if MPEG-2 TS is selected.
   --keep   : Keep the intermediate files produced during the rip.
   --shrink : Shrink the video stream so that:
                * MPEG-2 PS fits on a single layer DVD-/+R disk.
-               * MPEG-2 TS is two pass encoded as H.264 at a bitrate of 2816.               
+               * MPEG-2 TS is encoded as H.264 either using one pass CRF 16
+                 or two pass at a target bitrate of 2816.
   --help   : This help.
 
 The resulting .ISO can be tested with gmplayer or vlc to check that the 
@@ -96,8 +97,8 @@ This is how to install ifo_dump on Ubuntu Linux.
  mkdir dvdnav
  wget -c "http://dvd.cvs.sourceforge.net/viewvc/*checkout*/dvd/libdvdnav2/src/dvdread/ifo_print.h?revision=1.1.1.1" -O dvdnav/ifo_print.h
  wget -c "http://dvd.cvs.sourceforge.net/viewvc/*checkout*/dvd/libdvdnav2/src/dvdread/ifo_types.h?revision=1.1.1.1" -O dvdnav/ifo_types.h
- wget -c "http://dvd.cvs.sourceforge.net/viewvc/*checkout*/dvd/libdvdnav2/src/dvdread/dvd_reader.h?revision=1.1.1.1 -O dvdnav/dvd_reader.h
- ./autogen
+ wget -c "http://dvd.cvs.sourceforge.net/viewvc/*checkout*/dvd/libdvdnav2/src/dvdread/dvd_reader.h?revision=1.1.1.1" -O dvdnav/dvd_reader.h
+ ./autogen.sh
  make
  sudo make install
 
@@ -128,6 +129,9 @@ References
  - http://www.linuxquestions.org/questions/linuxanswers-discussion-27/discussion-dvd9-to-dvd5-guide-253747/
  - http://www.usenet-forums.com/linux-general/79033-copy-dvd-linux.html
  - http://polarwave.blogspot.com/2007/09/more-multimedia.html
+
+v1.2 2010, 27th January.
+ - Added 1 or 2 pass encoding for MPEG-2 TS.
 
 v1.1 2009, 23rd November.
 

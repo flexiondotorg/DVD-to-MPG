@@ -27,28 +27,11 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 IFS=$'\n'
-VER="1.1"
+VER="1.2"
 
 echo "DVD-to-MPG v${VER} - Rips a DVD to MPEG-2 PS or MPEG-2 TS."
-echo "Copyright (c) 2009 Flexion.Org, http://flexion.org. MIT License" 
+echo "Copyright (c) `date +%Y` Flexion.Org, http://flexion.org. MIT License" 
 echo
-
-function usage {
-    echo
-    echo "Usage"
-    echo "  ${0} /dev/dvd [--iso] [--m2ts] [--keep] [--shrink] [--help]"
-    echo ""
-    echo "You can also pass the following optional parameters"
-    echo "  --iso    : Create an ISO image of the ripped DVD.    (Implies MPEG-2 PS)"
-    echo "  --m2ts   : Create a MPEG-2 TS file with H.264 video. (Subtitles not supported)"
-    echo "  --keep   : Keep the intermediate files produced during the rip."
-    echo "  --shrink : Shrink the video stream so that:"
-    echo "               * MPEG-2 PS fits on a single layer DVD-/+R disk."
-    echo "               * MPEG-2 TS is two pass encoded as H.264 at a bitrate of 2816."    
-    echo "  --help   : This help."
-    echo
-    exit 1
-}
 
 # Define the commands we will be using. If you don't have them, get them! ;-)
 REQUIRED_TOOLS=`cat << EOF
@@ -95,6 +78,25 @@ do
     fi        
 done
 
+function usage {
+    echo
+    echo "Usage"
+    echo "  ${0} /dev/dvd [--iso] [--m2ts] [--2pass] [--keep] [--shrink] [--help]"
+    echo ""
+    echo "You can also pass the following optional parameters"
+    echo "  --iso    : Create an ISO image of the ripped DVD.    (Implies MPEG-2 PS)"
+    echo "  --m2ts   : Create a MPEG-2 TS file with H.264 video. (Subtitles not supported)"
+    echo "  --2pass  : Enable 2 pass encoding for the H.264 video if MPEG-2 TS is selected."    
+    echo "  --keep   : Keep the intermediate files produced during the rip."
+    echo "  --shrink : Shrink the video stream so that:"
+    echo "               * MPEG-2 PS fits on a single layer DVD-/+R disk."
+    echo "               * MPEG-2 TS is encoded as H.264 either using one pass CRF 16.5"
+    echo "                 or two pass at a target bitrate of 2816."    
+    echo "  --help   : This help."
+    echo
+    exit 1
+}
+
 # Get the first parameter passed in and validate it.
 if [ $# -lt 1 ]; then
     echo "ERROR! ${0} requires a path to a DVD device or directory as input"	   
@@ -118,11 +120,15 @@ SHRINK=0
 ISO=0
 M2TS=0
 KEEP_FILES=0
+VIDEO_PASS=1
 
 # Check for optional parameters
 while [ $# -gt 0 ]; 
 do
 	case "${1}" in
+        -2|-2pass|--2pass)
+            VIDEO_PASS=2
+            shift;; 	
 		-s|--shrink|-shrink)
             SHRINK=1
             shift;; 
@@ -175,7 +181,10 @@ VIDEO_HEIGHT=`grep "ID_VIDEO_HEIGHT" ${STREAM_INFO} | cut -d'=' -f2`
 VIDEO_FPS=`grep "ID_VIDEO_FPS" ${STREAM_INFO} | cut -d'=' -f2 | sed s'/.000//'`
 # Get the length of the video in secs and half it.
 VIDEO_LENGTH=`grep "ID_LENGTH" ${STREAM_INFO} | cut -d'=' -f2 | cut -d'.' -f1`
-VIDEO_MIDDLE=`echo ${VIDEO_LENGTH}/2 | bc`
+VIDEO_MIDDLE=`echo ${VIDEO_LENGTH}/4 | bc`
+
+echo $VIDEO_MIDDLE
+#exit
 
 # Get the aspect ratio.
 VIDEO_ASPECT=`grep Movie-Aspect ${STREAM_INFO} | grep -v undefined`
@@ -356,7 +365,7 @@ if [ ${SHRINK} -eq 1 ]; then
     if [ ${M2TS} -eq 1 ]; then
         mplayer "${VIDEO_FILE}" -aspect ${VIDEO_ASPECT} -nolirc -nojoystick -quiet -ss ${VIDEO_MIDDLE} -speed 100 -frames 480 -identify -nosound -vo null -ao null -vfm ffmpeg,libmpeg2 -vf cropdetect > ${CROP_FILE} 2>&1
         VIDEO_CROP=`grep "Crop area" ${CROP_FILE} | tail -n1 | cut -d'(' -f2 | sed 's/)\.//' | sed s'/-vf //'`
-	echo ${VIDEO_CROP}
+	    #echo ${VIDEO_CROP}
         CROP_WIDTH=`echo ${VIDEO_CROP} | cut -d'=' -f2 | cut -d':' -f1`
         CROP_HEIGHT=`echo ${VIDEO_CROP} | cut -d'=' -f2 | cut -d':' -f2`
         
@@ -397,15 +406,24 @@ if [ ${SHRINK} -eq 1 ]; then
         #  - http://www.wieser-web.de/MPlayer/sws1/
         #  - http://lists.mplayerhq.hu/pipermail/mplayer-users/2003-October/038642.html
 
-        X264_COMMON="bitrate=2816:bframes=3:b_bias=0:merange=16:direct_pred=auto:level=4.1:mixed_refs:weight_b:8x8dct:threads=auto"
-        X264_PASS1="pass=1:turbo=2:ref=1:me=dia:cabac=0:trellis=0:subme=1:b_adapt=1"
-        X264_PASS2="pass=2:turbo=0:ref=5:me=umh:cabac=1:trellis=1:subme=7:b_adapt=0"
+        if [ ${VIDEO_PASS} == "1" ]; then           
+            X264_COMMON="crf=17:bframes=3:b_bias=0:merange=16:direct_pred=auto:level=4.1:mixed_refs:weight_b:8x8dct:threads=auto"
+            X264_PASS="turbo=0:ref=5:me=umh:cabac=1:trellis=1:subme=7:b_adapt=1"            
 
-        echo "1st Pass"
-        eval mencoder "${VIDEO_FILE}" -vfm ffmpeg,libmpeg2 -nosound -of rawvideo -ovc x264 -vf pp=fd,${VIDEO_CROP},softskip,harddup -sws 0  -x264encopts ${X264_COMMON}:${X264_PASS1} -passlogfile ${PASS_FILE} -noskip -o /dev/null 2>/dev/null
+            echo "Encoding Video"
+            eval mencoder "${VIDEO_FILE}" -vfm ffmpeg,libmpeg2 -nosound -of rawvideo -ovc x264 -vf pp=fd,${VIDEO_CROP},softskip,harddup -sws 10 -x264encopts ${X264_COMMON}:${X264_PASS} -noskip -o ${X264_FILE} 2>/dev/null
+        
+        elif [ ${VIDEO_PASS} == "2" ]; then
+            X264_COMMON="bitrate=2816:bframes=3:b_bias=0:merange=16:direct_pred=auto:level=4.1:mixed_refs:weight_b:8x8dct:threads=auto"
+            X264_PASS1="pass=1:turbo=2:ref=1:me=dia:cabac=0:trellis=0:subme=1:b_adapt=1"
+            X264_PASS2="pass=2:turbo=0:ref=5:me=umh:cabac=1:trellis=1:subme=8:b_adapt=0"
 
-        echo "2nd Pass"
-        eval mencoder "${VIDEO_FILE}" -vfm ffmpeg,libmpeg2 -nosound -of rawvideo -ovc x264 -vf pp=fd,${VIDEO_CROP},softskip,harddup -sws 10 -x264encopts ${X264_COMMON}:${X264_PASS2} -passlogfile ${PASS_FILE} -noskip -o ${X264_FILE} 2>/dev/null
+            echo "1st Pass"
+            eval mencoder "${VIDEO_FILE}" -vfm ffmpeg,libmpeg2 -nosound -of rawvideo -ovc x264 -vf pp=fd,${VIDEO_CROP},softskip,harddup -sws 0  -x264encopts ${X264_COMMON}:${X264_PASS1} -passlogfile ${PASS_FILE} -noskip -o /dev/null 2>/dev/null
+
+            echo "2nd Pass"
+            eval mencoder "${VIDEO_FILE}" -vfm ffmpeg,libmpeg2 -nosound -of rawvideo -ovc x264 -vf pp=fd,${VIDEO_CROP},softskip,harddup -sws 10 -x264encopts ${X264_COMMON}:${X264_PASS2} -passlogfile ${PASS_FILE} -noskip -o ${X264_FILE} 2>/dev/null
+        fi            
     else
         # Calcualte the available DVD5 space for the video.
         if [ "${SUBS_TRACK}" != "" ]; then
@@ -416,7 +434,7 @@ if [ ${SHRINK} -eq 1 ]; then
 
         REQUANT_RATIO=`echo "scale=2; ${VIDEO_SIZE}/${REQUANT_SPACE}" | bc`
         # This is the requantisation factor, the closer to 1.00 the better. 
-        # TODO - is 1.04 an optimal scaler instead of 1.05?
+        # TODO - is 1.04 an optimal scaling factor? Perhaps 1.05 instead?
         REQUANT_FACTOR=`echo "scale=2; ${REQUANT_RATIO}*1.05" | bc`
         # Less than 1.00 means no shrinkage required.
         REQUANT_REQUIRED=`echo "${REQUANT_FACTOR} > 1.00" | bc`
