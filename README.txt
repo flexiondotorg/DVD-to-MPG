@@ -33,9 +33,9 @@ marketing guff at the start which you can't skip. My wife hates that stuff, and
 I love my wife, so I routinely rip the main feature of newly acquired ex-rental 
 DVD movies so we can avoid the marketing crap.
 
-I also run a Mediatomb DLNA server and I want to import all my DVDs. Ripping 
-them helps reduce the amount of storage I will require. MPEG2-PS and MPEG2-TS 
-files are compatible with my PS3 which is the client to my Mediatomb DLNA server.
+I also run a DLNA server and I want to import all my DVDs. Ripping them helps 
+reduce the amount of storage I will require. MPEG2-PS and MPEG2-TS files are 
+compatible with my PS3 which is the client to my DLNA server.
 
 As a solution to the above I created this script, which can extract the main 
 feature from a DVD video, allowing the user to select one audio stream and one
@@ -101,14 +101,7 @@ This is how to install ifo_dump on Ubuntu Linux.
  ./autogen.sh
  make
  sudo make install
-
-Updated mplayer and x264
-
-If you are running Ubuntu then I strongly suggest you added the Avenard 
-repository to your system as it includes recent builds of mplayer and x264. 
-
-  * http://avenard.com/media/Ubuntu_Repository/Ubuntu_Repository.html
-   
+ 
 Known Limitations
 
  - DVDs with ARccOS or other intentional sector corruption are not supported.
@@ -118,11 +111,9 @@ Known Limitations
 
 Source Code
 
-You can checkout the current branch from my Bazaar repository. This is a 
-read-only repository, get in touch if you want to contribute and require write 
-access.
+You can grab the source from Launchpad. Contributions are welcome :-)
 
- bzr co http://code.flexion.org/Bazaar/DVD-to-MPG/
+ - https://code.launchpad.net/~flexiondotorg
 
 References
 
