@@ -1,3 +1,7 @@
+############################################################
+# This project is inactive and archived here for reference #
+############################################################
+
 License
 
 Rips a DVD to MPEG-2 PS or MPEG-2 TS.
